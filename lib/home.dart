@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'home_screen.dart';
+
 void main() {
   runApp(const GachaApp());
 }
@@ -46,8 +48,15 @@ class WelcomeScreen extends StatelessWidget {
             TextButton(
               onPressed: () {
                 // Logic สำหรับ Guest
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const HomeScreen()),
+                );
               },
-              child: const Text('เข้าใช้งานแบบ Guest', style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                'เข้าใช้งานแบบ Guest',
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
           ],
         ),

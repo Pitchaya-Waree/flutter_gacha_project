@@ -10,20 +10,29 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List games = []; // ตัวแปรเก็บข้อมูลเกมจากฐานข้อมูล
+  List games = [];
+  bool isLoading = true; // เพิ่มตัวแปรสำหรับเช็คสถานะการโหลด
 
   @override
   void initState() {
     super.initState();
-    fetchGames(); // ดึงข้อมูลทันทีที่เปิดหน้าจอ
+    fetchGames();
   }
 
   // ฟังก์ชันดึงข้อมูลจาก Express.js API
   Future<void> fetchGames() async {
-    final response = await http.get(Uri.parse('https://your-api.vercel.app/games'));
-    if (response.statusCode == 200) {
+    try {
+      final response = await http.get(Uri.parse('https://api-ruddy-one-91.vercel.app/games'));
+      if (response.statusCode == 200) {
+        setState(() {
+          games = json.decode(response.body);
+          isLoading = false; // โหลดเสร็จแล้ว ปิดตัวโหลด
+        });
+      }
+    } catch (e) {
+      print("เกิดข้อผิดพลาดในการดึงข้อมูล: $e");
       setState(() {
-        games = json.decode(response.body);
+        isLoading = false;
       });
     }
   }
@@ -34,53 +43,73 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.home),
-          onPressed: () => fetchGames(), // กด Home เพื่อ Refresh ข้อมูล
+          onPressed: fetchGames, // กดเพื่อรีเฟรชข้อมูล
         ),
         actions: [
           GestureDetector(
             onTap: () {
-              // ไปหน้าประวัติการสุ่ม (User Profile)
+              // TODO: นำทางไปหน้าประวัติการสุ่ม
             },
             child: const Padding(
               padding: EdgeInsets.all(8.0),
               child: CircleAvatar(
-                backgroundImage: NetworkImage('URL_รูป_USER'),
+                // ใส่รูป Avatar จำลอง หรือดึงจาก URL ของ User
+                backgroundImage: NetworkImage('https://robohash.org/avatar.png'),
               ),
             ),
           ),
         ],
       ),
-      body: games.isEmpty
+      // แสดงวงกลมโหลดข้อมูล ถ้าโหลดเสร็จค่อยแสดง List
+      body: isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: games.length,
-              itemBuilder: (context, index) {
-                return Card(
-                  child: Column(
-                    children: [
-                      // ล็อคขนาดรูปภาพให้เท่ากันทุกใบ
-                      Image.network(
-                        games[index]['game_image'],
-                        width: double.infinity,
-                        height: 200,
-                        fit: BoxFit.cover,
+          : games.isEmpty
+              ? const Center(child: Text("ยังไม่มีข้อมูลเกมในระบบ"))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: games.length,
+                  itemBuilder: (context, index) {
+                    final game = games[index];
+                    return Card(
+                      elevation: 4, // เพิ่มเงาให้การ์ดดูมีมิติ
+                      margin: const EdgeInsets.only(bottom: 15),
+                      // ใช้ ClipRRect ตัดขอบการ์ดให้โค้งมน
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min, // 🌟 ป้องกัน Error RenderFlex
+                        crossAxisAlignment: CrossAxisAlignment.stretch, // 🌟 ขยายรูปให้เต็มการ์ดอย่างปลอดภัย
+                        children: [
+                          // ส่วนแสดงรูปภาพ
+                          Image.network(
+                            game['game_image'] ?? '', // ถ้าไม่มี URL ให้เป็น String ว่าง
+                            height: 200,
+                            fit: BoxFit.cover,
+                            // 🌟 ระบบป้องกัน: ถ้ารูปโหลดไม่ขึ้น หรือลิ้งค์เสีย จะไม่ Error แดง แต่โชว์กล่องสีเทาแทน
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 200,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                              );
+                            },
+                          ),
+                          // ส่วนแสดงชื่อเกม
+                          Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Text(
+                              game['game_name'] ?? 'ไม่ทราบชื่อเกม',
+                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
                       ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          games[index]['game_name'],
-                          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // ไปหน้าสุ่ม Gacha
+          // TODO: นำทางไปหน้าสุ่ม Gacha
         },
         child: const Icon(Icons.add),
       ),

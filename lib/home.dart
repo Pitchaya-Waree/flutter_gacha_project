@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_screen.dart';
 import 'home_screen.dart';
 
 void main() {
@@ -40,23 +39,10 @@ class WelcomeScreen extends StatelessWidget {
                 // คำสั่งนำทางไปยังหน้า Login
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
-              },
-              child: const Text('เข้าสู่ระบบ'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Logic สำหรับ Guest
-                Navigator.pushReplacement(
-                  context,
                   MaterialPageRoute(builder: (context) => const HomeScreen()),
                 );
               },
-              child: const Text(
-                'เข้าใช้งานแบบ Guest',
-                style: TextStyle(color: Colors.grey),
-              ),
+              child: const Text('เข้าสู่ระบบ'),
             ),
           ],
         ),

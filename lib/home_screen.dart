@@ -1,39 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'user_profile_screen.dart'; // อย่าลืม import หน้า Profile ที่ทำไว้ก่อนหน้านี้
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  List games = [];
-  bool isLoading = true; // เพิ่มตัวแปรสำหรับเช็คสถานะการโหลด
+  List<dynamic> gamesData = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    fetchGames();
+    fetchGames(); // เรียกใช้ฟังก์ชันตอนเปิดหน้าจอ
   }
 
-  // ฟังก์ชันดึงข้อมูลจาก Express.js API
   Future<void> fetchGames() async {
+    // เปลี่ยน URL ให้ตรงกับ Vercel ของคุณ (อย่าลืมเติม /api/games ต่อท้าย)
+    final url = Uri.parse('https://your-vercel-api-url.vercel.app/api/games');
+    
     try {
-      final response = await http.get(Uri.parse('https://api-ruddy-one-91.vercel.app/games'));
+      final response = await http.get(url);
       if (response.statusCode == 200) {
         setState(() {
-          games = json.decode(response.body);
-          isLoading = false; // โหลดเสร็จแล้ว ปิดตัวโหลด
+          gamesData = json.decode(response.body);
+          isLoading = false;
         });
+      } else {
+        setState(() => isLoading = false);
+        print('Failed to load games');
       }
     } catch (e) {
-      print("เกิดข้อผิดพลาดในการดึงข้อมูล: $e");
-      setState(() {
-        isLoading = false;
-      });
+      setState(() => isLoading = false);
+      print('Error: $e');
     }
   }
 
@@ -41,78 +45,59 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.home),
-          onPressed: fetchGames, // กดเพื่อรีเฟรชข้อมูล
-        ),
+        title: const Text('Gacha Games'),
         actions: [
-          GestureDetector(
-            onTap: () {
-              // TODO: นำทางไปหน้าประวัติการสุ่ม
+          IconButton(
+            icon: const Icon(Icons.account_circle, size: 30),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const UserProfileScreen()),
+              );
             },
-            child: const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: CircleAvatar(
-                // ใส่รูป Avatar จำลอง หรือดึงจาก URL ของ User
-                backgroundImage: NetworkImage('https://robohash.org/avatar.png'),
-              ),
-            ),
           ),
         ],
       ),
-      // แสดงวงกลมโหลดข้อมูล ถ้าโหลดเสร็จค่อยแสดง List
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : games.isEmpty
-              ? const Center(child: Text("ยังไม่มีข้อมูลเกมในระบบ"))
-              : ListView.builder(
-                  padding: const EdgeInsets.all(10),
-                  itemCount: games.length,
-                  itemBuilder: (context, index) {
-                    final game = games[index];
-                    return Card(
-                      elevation: 4, // เพิ่มเงาให้การ์ดดูมีมิติ
-                      margin: const EdgeInsets.only(bottom: 15),
-                      // ใช้ ClipRRect ตัดขอบการ์ดให้โค้งมน
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      clipBehavior: Clip.antiAlias,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min, // 🌟 ป้องกัน Error RenderFlex
-                        crossAxisAlignment: CrossAxisAlignment.stretch, // 🌟 ขยายรูปให้เต็มการ์ดอย่างปลอดภัย
-                        children: [
-                          // ส่วนแสดงรูปภาพ
-                          Image.network(
-                            game['game_image'] ?? '', // ถ้าไม่มี URL ให้เป็น String ว่าง
-                            height: 200,
-                            fit: BoxFit.cover,
-                            // 🌟 ระบบป้องกัน: ถ้ารูปโหลดไม่ขึ้น หรือลิ้งค์เสีย จะไม่ Error แดง แต่โชว์กล่องสีเทาแทน
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 200,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                              );
-                            },
+          ? const Center(child: CircularProgressIndicator()) // แสดงตอนกำลังโหลด
+          : gamesData.isEmpty
+              ? const Center(child: Text('ไม่มีเกมในระบบ'))
+              : Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  // แสดงผลรายการเกม
+                  child: ListView.builder(
+                    itemCount: gamesData.length,
+                    itemBuilder: (context, index) {
+                      final game = gamesData[index];
+                      return Card(
+                        elevation: 3,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.all(16),
+                          // ถ้า gameavatar เป็น URL รูปภาพ สามารถใช้ Image.network() ได้
+                          // แต่ตอนนี้ใช้ Icon แทนไปก่อน
+                          leading: const CircleAvatar(
+                            radius: 30,
+                            child: Icon(Icons.videogame_asset, size: 30),
                           ),
-                          // ส่วนแสดงชื่อเกม
-                          Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Text(
-                              game['game_name'] ?? 'ไม่ทราบชื่อเกม',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          title: Text(
+                            game['gamename'] ?? 'Unknown Game',
+                            style: const TextStyle(
+                              fontSize: 18, 
+                              fontWeight: FontWeight.bold
                             ),
                           ),
-                        ],
-                      ),
-                    );
-                  },
+                          subtitle: Text('Type: ${game['gametype'] ?? '-'}'),
+                          trailing: const Icon(Icons.arrow_forward_ios),
+                          onTap: () {
+                            // โค้ดสำหรับเมื่อกดที่เกม เพื่อไปยังหน้าสุ่ม Gacha ของเกมนั้น
+                            print('กดเข้าเกม: ${game['gamename']}');
+                          },
+                        ),
+                      );
+                    },
+                  ),
                 ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // TODO: นำทางไปหน้าสุ่ม Gacha
-        },
-        child: const Icon(Icons.add),
-      ),
     );
   }
 }

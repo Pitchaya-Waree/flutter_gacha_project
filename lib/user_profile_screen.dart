@@ -21,8 +21,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   Future<void> fetchHistory() async {
     // เปลี่ยน URL นี้เป็น URL API Vercel ของคุณ
-    final url = Uri.parse('https://your-vercel-api-url.vercel.app/api/gacha-history');
-    
+    final url = Uri.parse('https://api-ruddy-one-91.vercel.app/gacha');
+
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
@@ -50,7 +50,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             child: CircleAvatar(
               child: Text('User', style: TextStyle(fontSize: 12)),
             ),
-          )
+          ),
         ],
       ),
       body: Padding(
@@ -83,7 +83,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       padding: EdgeInsets.all(12.0),
                       child: Text(
                         'Gacha History',
-                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const Divider(height: 1, color: Colors.black54),
@@ -91,18 +94,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                       child: isLoading
                           ? const Center(child: CircularProgressIndicator())
                           : historyData.isEmpty
-                              ? const Center(child: Text('ไม่มีประวัติการสุ่ม'))
-                              : ListView.builder(
-                                  itemCount: historyData.length,
-                                  itemBuilder: (context, index) {
-                                    final item = historyData[index];
-                                    return ListTile(
-                                      leading: const Icon(Icons.stars, color: Colors.amber),
-                                      title: Text('${item['gamename']} - ${item['itemname']}'),
-                                      subtitle: Text('Rarity: ${item['itemrarity']}'),
-                                    );
-                                  },
-                                ),
+                          ? const Center(child: Text('ไม่มีประวัติการสุ่ม'))
+                          : ListView.builder(
+                              itemCount: historyData.length,
+                              itemBuilder: (context, index) {
+                                final item = historyData[index];
+                                return ListTile(
+                                  leading: const Icon(
+                                    Icons.stars,
+                                    color: Colors.amber,
+                                  ),
+                                  title: Text(
+                                    '${item['gamename']} - ${item['itemname']}',
+                                  ),
+                                  subtitle: Text(
+                                    'Rarity: ${item['itemrarity']}',
+                                  ),
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),

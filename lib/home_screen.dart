@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'user_profile_screen.dart'; // อย่าลืม import หน้า Profile ที่ทำไว้ก่อนหน้านี้
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  const HomeScreen({super.key});
 
   @override
   _HomeScreenState createState() => _HomeScreenState();

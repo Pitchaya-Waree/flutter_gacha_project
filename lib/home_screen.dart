@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'user_profile_screen.dart'; // อย่าลืม import หน้า Profile ที่ทำไว้ก่อนหน้านี้
+import 'user_profile_screen.dart';
+import 'gacha_screen.dart'; 
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -124,7 +125,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       subtitle: Text('Type: ${game['gametype'] ?? '-'}'),
                       trailing: const Icon(Icons.arrow_forward_ios),
                       onTap: () {
-                        print('กดเข้าเกม: ${game['gamename']}');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => GachaScreen(
+                              // ส่ง game_id ไปเป็น String
+                              initialGameId: game['game_id'].toString(),
+                            ),
+                          ),
+                        );
                       },
                     ),
                   );
